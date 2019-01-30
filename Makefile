@@ -15,6 +15,7 @@ FFI_INCLUDE:=-I src/ffi -lntl -lgmp
 SRC:=src
 INCLUDE:=-I src $(FFI_INCLUDE)
 MAIN_SIG:=src/test_signature.cpp
+MAIN_ATTACK:=src/attack.cpp
 LIB:=$(HASH_INCLUDE) $(RNG_INCLUDE)
 
 SIG_OBJS:=ffi_field.o ffi_elt.o ffi_vec.o parsing.o decoder.o signature.o 
@@ -51,6 +52,10 @@ ffi_%.o: $(FFI_SRC)/ffi_%.cpp | folders
 signature: $(SIG_OBJS) $(LIB_OBJS) | folders
 	@echo -e "\n### Compiling signature\n"
 	$(CC) $(CFLAGS) $(MAIN_SIG) $(addprefix $(BUILD)/, $^) $(INCLUDE) $(LIB) -o $(BIN)/$@
+
+attack: $(SIG_OBJS) $(LIB_OBJS) | folders
+	@echo -e "\n### Compiling signature\n"
+	$(CC) $(CFLAGS) $(MAIN_ATTACK) $(addprefix $(BUILD)/, $^) $(INCLUDE) $(LIB) -o $(BIN)/$@
 
 clean:
 	rm -f PQCkemKAT_*
