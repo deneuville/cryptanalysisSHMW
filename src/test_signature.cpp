@@ -4,6 +4,11 @@
 #include "ffi_field.h"
 #include "ffi_vec.h"
 
+#include <fstream>
+#include <errno.h>
+
+using namespace std;
+
 int main() {
 
   printf("\n");
@@ -51,6 +56,39 @@ int main() {
 
   if(!signature_verify(pk, message, mlen, signature)) printf("Signature OK\n");
   else printf("Error during verification\n");
+
+  //Stores the keys and the signature in the files/ folder to perform the attack
+  ofstream pkFile, skFile, sigFile;
+
+  //Public key
+  pkFile.open("files/pk");
+  if(pkFile.is_open()) {
+    for(int i=0 ; i<PUBLIC_KEY_BYTES ; i++) pkFile << pk[i];
+    pkFile.close();
+  }
+  else {
+    cout << strerror(errno) << endl;
+  }
+
+  //Secret key
+  skFile.open("files/sk");
+  if(skFile.is_open()) {
+    for(int i=0 ; i<SECRET_KEY_BYTES ; i++) skFile << sk[i];
+    pkFile.close();
+  }
+  else {
+    cout << strerror(errno) << endl;
+  }
+
+  //Signature
+  sigFile.open("files/sig");
+  if(sigFile.is_open()) {
+    for(int i=0 ; i<SIGNATURE_BYTES ; i++) sigFile << signature[i];
+    pkFile.close();
+  }
+  else {
+    cout << strerror(errno) << endl;
+  }
 
   free(message);
 }
