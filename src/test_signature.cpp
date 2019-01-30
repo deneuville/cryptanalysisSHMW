@@ -21,6 +21,14 @@ int main() {
 
   signature_keygen(pk, sk);
 
+  printf("Secret key :\n");
+  for(int i=0 ; i<SECRET_KEY_BYTES ; i++) printf("%.02X", sk[i]);
+  printf("\n\n");
+
+  printf("Public key :\n");
+  for(int i=0 ; i<PUBLIC_KEY_BYTES ; i++) printf("%.02X", pk[i]);
+  printf("\n\n");
+
   signature_sign(pk, message, signature);
 
   signature_verify(sk, message, signature);
