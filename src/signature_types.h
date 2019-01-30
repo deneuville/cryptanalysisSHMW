@@ -7,6 +7,7 @@ typedef struct secretKey {
 	ffi_vec E;
 	ffi_vec x;
 	ffi_vec y;
+	ffi_vec h;
 } secretKey;
 
 typedef struct publicKey {
@@ -16,7 +17,8 @@ typedef struct publicKey {
 
 typedef struct signature {
 	ffi_vec g;
-	ffi_vec u;
+	ffi_vec u1;
+	ffi_vec u2;
 } signature;
 
 #endif

@@ -17,7 +17,13 @@ int main() {
   unsigned char sk[SECRET_KEY_BYTES];
 
   unsigned char signature[SIGNATURE_BYTES];
-  unsigned char *message;
+
+  unsigned int mlen = 4;
+  const char *tmp = "toto";
+  unsigned char *message = (unsigned char *) malloc(mlen * sizeof(char));
+  memcpy(message, tmp, mlen);
+
+  /***************** Keygen ********************/
 
   signature_keygen(pk, sk);
 
@@ -29,7 +35,22 @@ int main() {
   for(int i=0 ; i<PUBLIC_KEY_BYTES ; i++) printf("%.02X", pk[i]);
   printf("\n\n");
 
-  signature_sign(pk, message, signature);
+  /************* Signature ********************/
 
-  signature_verify(sk, message, signature);
+  signature_sign(sk, message, mlen, signature);
+
+  printf("Message :\n");
+  for(int i=0 ; i<mlen ; i++) printf("%c", message[i]);
+  printf("\n\n");
+
+  printf("Signature :\n");
+  for(int i=0 ; i<SIGNATURE_BYTES ; i++) printf("%.02X", signature[i]);
+  printf("\n\n");
+  
+  /************* Verification ****************/
+
+  if(!signature_verify(pk, message, mlen, signature)) printf("Signature OK\n");
+  else printf("Error during verification\n");
+
+  free(message);
 }
