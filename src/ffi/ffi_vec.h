@@ -19,6 +19,8 @@ void ffi_vec_set_random_from_support_using_rng(ffi_vec& o, unsigned int size, co
 void ffi_vec_set_coeff(ffi_vec &v, const ffi_elt& e, unsigned int position);
 void ffi_vec_get_coeff(ffi_elt& o, const ffi_vec& v, unsigned int position);
 
+int ffi_vec_cmp(const ffi_vec &v1, const ffi_vec &v2, unsigned int size);
+
 unsigned int ffi_vec_gauss(ffi_vec &o, unsigned int size);
 unsigned int ffi_vec_get_rank(ffi_vec v, unsigned int size);
 void ffi_vec_echelonize(ffi_vec &o, unsigned int size);

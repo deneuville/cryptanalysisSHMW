@@ -118,5 +118,29 @@ int signature_verify(unsigned char *pk, unsigned char *m, unsigned int mlen, uns
 	ffi_field_init();
 	ffi_vec_init_mulmod();
 
-	return 0;
+	//Recover public key and signature from strings
+	signature sig_tmp;
+	sig_signature_from_string(sig_tmp, sig);
+
+	publicKey pk_tmp;
+	sig_public_key_from_string(pk_tmp, pk);
+
+	//Computation of I = u1 + h.u2 - s.g
+	ffi_vec I, tmp;
+
+	ffi_vec_mul(tmp, pk_tmp.h, sig_tmp.u2, PARAM_N);
+	ffi_vec_add(I, sig_tmp.u1, tmp, PARAM_N);
+
+	ffi_vec_mul(tmp, pk_tmp.s, sig_tmp.g, PARAM_N);
+	//add and sub are equivalent since q=2
+	ffi_vec_add(I, I, tmp, PARAM_N);
+
+	//Computation of H(I, m)
+	ffi_vec hash;
+	H(hash, I, m, mlen);
+
+	//Return 0 if hash = g (valid)
+	//1 otherwise
+	if(ffi_vec_cmp(hash, sig_tmp.g, PARAM_N)) return 0;
+	else return 1;
 }

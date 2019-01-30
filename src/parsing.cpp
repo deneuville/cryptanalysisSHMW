@@ -33,5 +33,7 @@ void sig_signature_to_string(unsigned char* sigString, signature sig) {
 }
 
 void sig_signature_from_string(signature &sig, const unsigned char* sigString) {
-	
+	ffi_vec_from_string(sig.g, PARAM_N, sigString);
+	ffi_vec_from_string(sig.u1, PARAM_N, sigString + GF2MBYTES*PARAM_N);
+	ffi_vec_from_string(sig.u2, PARAM_N, sigString + GF2MBYTES*2*PARAM_N);
 }

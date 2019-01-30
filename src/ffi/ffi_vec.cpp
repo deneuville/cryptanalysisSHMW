@@ -274,7 +274,7 @@ void ffi_vec_get_coeff(ffi_elt& o, const ffi_vec& v, unsigned int position) {
 	o = coeff(v, position);
 }
 
-int ffi_vec_cmp(const ffi_vec &v1, const ffi_vec &v2) {
+int ffi_vec_cmp(const ffi_vec &v1, const ffi_vec &v2, unsigned int size) {
   return v1 == v2;
 }
 
