@@ -9,11 +9,15 @@
 
 #include <fstream>
 #include <errno.h>
+#include <time.h>
 
 #include <NTL/GF2.h>
 #include <NTL/vec_GF2.h>
 #include <NTL/mat_GF2E.h>
 #include <NTL/mat_GF2.h>
+
+#define ITERATIONS 1000
+#define VERBOSE 0
 
 using namespace std;
 using namespace NTL;
@@ -31,69 +35,97 @@ int main() {
   printf("W: %d   ", PARAM_W);
   printf("\n");
 
-  unsigned char pk[PUBLIC_KEY_BYTES];
-  unsigned char sig[SIGNATURE_BYTES];
+  int recoveredSK = 0;
+  float totalTime = 0;
 
-  //First load the signature and the public key
-  ifstream sigFile, pkFile;
+  for(int iter=0 ; iter<ITERATIONS ; iter++) {
+    char pkFilename[50],  sigFilename[50];
 
-  //Signature
-  sigFile.open("files/sig", ios::binary);
-  if(sigFile.is_open()) {
-    sigFile.read((char*)sig, SIGNATURE_BYTES);
-    sigFile.close();
+    sprintf(pkFilename, "files/pk%d", iter);
+    sprintf(sigFilename, "files/sig%d", iter);
+
+    unsigned char pk[PUBLIC_KEY_BYTES];
+    unsigned char sig[SIGNATURE_BYTES];
+
+    //First load the signature and the public key
+    ifstream sigFile, pkFile;
+
+    //Signature
+    sigFile.open(sigFilename, ios::binary);
+    if(sigFile.is_open()) {
+      sigFile.read((char*)sig, SIGNATURE_BYTES);
+      sigFile.close();
+    }
+    else {
+      cout << strerror(errno) << endl;
+    }
+
+    //Public key
+    pkFile.open(pkFilename, ios::binary);
+    if(pkFile.is_open()) {
+      pkFile.read((char*)pk, PUBLIC_KEY_BYTES);
+      pkFile.close();
+    }
+    else {
+      cout << strerror(errno) << endl;
+    }
+
+    if(VERBOSE) {
+      printf("Loaded public key :\n");
+      for(int i=0 ; i<PUBLIC_KEY_BYTES ; i++) printf("%.02X", pk[i]);
+      printf("\n\n");  
+
+      printf("Loaded signature :\n");
+      for(int i=0 ; i<SIGNATURE_BYTES ; i++) printf("%.02X", sig[i]);
+      printf("\n\n");
+    }
+    
+    ffi_vec E;
+
+    clock_t begin, end;
+    begin = clock();
+
+    //Recover the support of x and y
+    unsigned int dimE = secretSupport(E, sig);
+
+    if(VERBOSE) {
+      printf("Recovered support : \n");
+      ffi_vec_print(E, dimE);
+    }
+
+    if(dimE == PARAM_W) {
+      //Load the secret key and check if the recovered vector space E is the support of x and y
+      ifstream skFile;
+
+      //Then solve a linear system to compute x and y
+      ffi_vec x, y;
+      solveSystem(x, y, E, pk);
+
+      publicKey pk_tmp;
+      sig_public_key_from_string(pk_tmp, pk);
+
+      //Check validity of the recovered 
+      ffi_vec tmp;
+      ffi_vec computedS;
+      ffi_vec_mul(tmp, pk_tmp.h, y, PARAM_N);
+
+      ffi_vec_add(computedS, x, tmp, PARAM_N);
+
+      if(ffi_vec_cmp(computedS, pk_tmp.s, PARAM_N)) {
+        recoveredSK++;
+        end = clock();
+        totalTime += (float)(end-begin)/CLOCKS_PER_SEC;
+      }
+
+      if(VERBOSE) {
+        if(ffi_vec_cmp(computedS, pk_tmp.s, PARAM_N)) printf ("Successfully recovered x and y such that x + hy = s\n");
+        else printf("Faild to recover x and y such that x + hy = s\n");
+      }
+    }
   }
-  else {
-    cout << strerror(errno) << endl;
-  }
 
-  //Public key
-  pkFile.open("files/pk", ios::binary);
-  if(pkFile.is_open()) {
-    pkFile.read((char*)pk, PUBLIC_KEY_BYTES);
-    pkFile.close();
-  }
-  else {
-    cout << strerror(errno) << endl;
-  }
-
-  printf("Loaded public key :\n");
-  for(int i=0 ; i<PUBLIC_KEY_BYTES ; i++) printf("%.02X", pk[i]);
-  printf("\n\n");  
-
-  printf("Loaded signature :\n");
-  for(int i=0 ; i<SIGNATURE_BYTES ; i++) printf("%.02X", sig[i]);
-  printf("\n\n");
-
-  ffi_vec E;
-
-  //Recover the support of x and y
-  unsigned int dimE = secretSupport(E, sig);
-
-  printf("Recovered support : \n");
-  ffi_vec_print(E, dimE);
-
-  if(dimE == PARAM_W) {
-    //Load the secret key and check if the recovered vector space E is the support of x and y
-    ifstream skFile;
-
-    //Then solve a linear system to compute x and y
-    ffi_vec x, y;
-    solveSystem(x, y, E, pk);
-
-    publicKey pk_tmp;
-    sig_public_key_from_string(pk_tmp, pk);
-
-    //Check validity of the recovered 
-    ffi_vec tmp;
-    ffi_vec computedS;
-    ffi_vec_mul(tmp, pk_tmp.h, y, PARAM_N);
-
-    ffi_vec_add(computedS, x, tmp, PARAM_N);
-  
-    if(ffi_vec_cmp(computedS, pk_tmp.s, PARAM_N)) printf ("Successfully recovered x and y such that x + hy = s\n");
-    else printf("Faild to recover x and y such that x + hy = s\n");
-  }
+  printf("%d secret keys recovered out of %d\n", recoveredSK, ITERATIONS);
+  printf("Average recovery time : %fs\n", totalTime/recoveredSK);
 }
 
 unsigned int secretSupport(ffi_vec &E, unsigned char* sig) {
@@ -120,16 +152,16 @@ unsigned int secretSupport(ffi_vec &E, unsigned char* sig) {
   ffi_elt invG;
   for(unsigned int i = 0 ; i < dimG ; ++i) {
     ffi_elt_inv(invG, G[i]);
-    ffi_vec_scalar_mul(Ui[i], U, invG, PARAM_N);
+    ffi_vec_scalar_mul(Ui[i], U, invG, dimU);
   }
 
   //Intersect until finding E
   unsigned int E_dim;
-  ffi_vec_intersection(E, E_dim, Ui[0], PARAM_N, Ui[1], PARAM_N);
+  ffi_vec_intersection(E, E_dim, Ui[0], dimU, Ui[1], dimU);
 
   if(E_dim > PARAM_W) {
     for(unsigned int i = 2 ; i < PARAM_W ; ++i) {
-      ffi_vec_intersection(E, E_dim, E, E_dim, Ui[i], PARAM_N);
+      ffi_vec_intersection(E, E_dim, E, E_dim, Ui[i], dimU);
       if(E_dim <= PARAM_W) break;
     }
   }
@@ -139,7 +171,6 @@ unsigned int secretSupport(ffi_vec &E, unsigned char* sig) {
 
 long gaussWithEq(mat_GF2& M, vec_GF2 &equations)
 {
-   long k, l;
    long i, j;
    long pivot;
 
