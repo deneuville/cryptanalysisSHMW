@@ -18,7 +18,7 @@ MAIN_SIG:=src/test_signature.cpp
 MAIN_ATTACK:=src/attack.cpp
 LIB:=$(HASH_INCLUDE) $(RNG_INCLUDE)
 
-SIG_OBJS:=ffi_field.o ffi_elt.o ffi_vec.o parsing.o decoder.o signature.o 
+SIG_OBJS:=ffi_field.o ffi_elt.o ffi_vec.o parsing.o signature.o 
 
 LIB_OBJS:=hash.o rng.o
 

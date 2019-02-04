@@ -21,7 +21,7 @@ using namespace NTL;
 unsigned int secretSupport(ffi_vec &E, unsigned char* sig);
 long gaussWithEq(mat_GF2& M, vec_GF2 &equations);
 vec_GF2 coordsFromVEc(ffi_vec x, ffi_vec support);
-unsigned int solveSystem(ffi_vec &x, ffi_vec &y, const ffi_vec &E, unsigned char *pk, ffi_vec target_x, ffi_vec target_y);
+unsigned int solveSystem(ffi_vec &x, ffi_vec &y, const ffi_vec &E, unsigned char *pk);
 
 int main() {
 
@@ -76,32 +76,23 @@ int main() {
   if(dimE == PARAM_W) {
     //Load the secret key and check if the recovered vector space E is the support of x and y
     ifstream skFile;
-    unsigned char sk[SECRET_KEY_BYTES];
-    //Secret key
-    skFile.open("files/sk", ios::binary);
-    if(skFile.is_open()) {
-      skFile.read((char*)sk, SECRET_KEY_BYTES);
-      skFile.close();
-    }
-    else {
-      cout << strerror(errno) << endl;
-    }
-
-    secretKey sk_tmp;
-    sig_secret_key_from_string(sk_tmp, sk);
-
-    ffi_vec_echelonize(sk_tmp.E, PARAM_W);
-
-    printf("Secret key support :\n");
-    ffi_vec_print(sk_tmp.E, PARAM_W);
-
-    if(ffi_vec_cmp(E, sk_tmp.E, PARAM_W)) printf("Secret support recovered\n");
 
     //Then solve a linear system to compute x and y
     ffi_vec x, y;
-    solveSystem(x, y, E, pk, sk_tmp.x, sk_tmp.y);
+    solveSystem(x, y, E, pk);
 
-    cout << "Secret key y :" << endl << sk_tmp.y << endl;
+    publicKey pk_tmp;
+    sig_public_key_from_string(pk_tmp, pk);
+
+    //Check validity of the recovered 
+    ffi_vec tmp;
+    ffi_vec computedS;
+    ffi_vec_mul(tmp, pk_tmp.h, y, PARAM_N);
+
+    ffi_vec_add(computedS, x, tmp, PARAM_N);
+  
+    if(ffi_vec_cmp(computedS, pk_tmp.s, PARAM_N)) printf ("Successfully recovered x and y such that x + hy = s\n");
+    else printf("Faild to recover x and y such that x + hy = s\n");
   }
 }
 
@@ -142,8 +133,6 @@ unsigned int secretSupport(ffi_vec &E, unsigned char* sig) {
       if(E_dim <= PARAM_W) break;
     }
   }
-
-  ffi_vec_echelonize(E, E_dim);
 
   return E_dim;
 }
@@ -228,7 +217,7 @@ vec_GF2 coordsFromVEc(ffi_vec x, ffi_vec support) {
   return res;
 }
 
-unsigned int solveSystem(ffi_vec &x, ffi_vec &y, const ffi_vec &E, unsigned char *pk, ffi_vec target_x, ffi_vec target_y) {
+unsigned int solveSystem(ffi_vec &x, ffi_vec &y, const ffi_vec &E, unsigned char *pk) {
   //Parse the public key to recover h
   publicKey pk_tmp;
   sig_public_key_from_string(pk_tmp, pk);
@@ -322,8 +311,6 @@ unsigned int solveSystem(ffi_vec &x, ffi_vec &y, const ffi_vec &E, unsigned char
       y[i] = y[i] + E[j] * solution[(i+PARAM_N)*PARAM_W + j];
     }
   }
-
-  cout << y << endl;
 
   return 0;
 }

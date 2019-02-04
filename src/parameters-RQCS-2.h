@@ -1,11 +1,11 @@
 #ifndef SIG_PARAMETER_H
 #define SIG_PARAMETER_H
 
-#define PARAM_M 139 /**< Parameter m of the scheme (finite field GF(2^m)) */
-#define PARAM_N 101 /**< Parameter n of the scheme (code length) */
+#define PARAM_M 121 /**< Parameter m of the scheme (finite field GF(2^m)) */
+#define PARAM_N 97 /**< Parameter n of the scheme (code length) */
 #define PARAM_W 6 /**< Parameter d of the scheme (weight of vectors) */
 
-#define GF2MBYTES 18 //Number of bytes to store an element of GF2^m
+#define GF2MBYTES 16 //Number of bytes to store an element of GF2^m
 
 #define SHA512_BYTES 64 /**< Size of SHA512 output */
 
@@ -13,8 +13,8 @@
 #define SEEDEXPANDER_MAX_LENGTH 4294967295 /**< Max length of the NIST seed expander */
 
 //Size of the keys and signature - not tight
-#define SECRET_KEY_BYTES 3726
-#define PUBLIC_KEY_BYTES 3636
-#define SIGNATURE_BYTES 5454
+#define SECRET_KEY_BYTES 3200
+#define PUBLIC_KEY_BYTES 3104
+#define SIGNATURE_BYTES 4656
 
 #endif
