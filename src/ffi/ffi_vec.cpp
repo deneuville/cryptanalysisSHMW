@@ -599,11 +599,7 @@ void ffi_vec_print(const ffi_vec& v, unsigned int size) {
 void ffi_vec_init_mulmod() {
   if(mul_modulo_deg == 0) {
     SetCoeff(mul_modulo, PARAM_N, 1);
-    int coeffs[NMODCOEFFS] = MODCOEFFS;
-    int i;
-    for(i=0 ; i<NMODCOEFFS ; i++) {
-      SetCoeff(mul_modulo, coeffs[i], 1);
-    }
+
     SetCoeff(mul_modulo, 0, 1);
     mul_modulo_deg = FIELD_M;
   }
