@@ -51,12 +51,12 @@ ffi_%.o: $(FFI_SRC)/ffi_%.cpp | folders
 
 signature: $(SIG_OBJS) $(LIB_OBJS) | folders
 	@echo -e "\n### Compiling signature\n"
-	mkdir files
+	mkdir -p files
 	$(CC) $(CFLAGS) $(MAIN_SIG) $(addprefix $(BUILD)/, $^) $(INCLUDE) $(LIB) -o $(BIN)/$@
 
 attack: $(SIG_OBJS) $(LIB_OBJS) | folders
 	@echo -e "\n### Compiling attack\n"
-	mkdir files
+	mkdir -p files
 	$(CC) $(CFLAGS) $(MAIN_ATTACK) $(addprefix $(BUILD)/, $^) $(INCLUDE) $(LIB) -o $(BIN)/$@
 
 clean:
