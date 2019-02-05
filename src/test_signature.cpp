@@ -7,8 +7,8 @@
 #include <fstream>
 #include <errno.h>
 
-#define ITERATIONS 1000
-#define VERBOSE 0
+#define ITERATIONS 1
+#define VERBOSE 1
 
 using namespace std;
 

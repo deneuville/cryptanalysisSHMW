@@ -16,8 +16,8 @@
 #include <NTL/mat_GF2E.h>
 #include <NTL/mat_GF2.h>
 
-#define ITERATIONS 1000
-#define VERBOSE 0
+#define ITERATIONS 1
+#define VERBOSE 1
 
 using namespace std;
 using namespace NTL;
